@@ -95,7 +95,23 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const setApiKeyDisposable = vscode.commands.registerCommand(
+    'gitCommitMessageGenerator.setApiKey',
+    async () => {
+      const apiKey = await vscode.window.showInputBox({
+        prompt: 'Enter your API key',
+        password: true
+      });
+
+      if (apiKey) {
+        await configManager.setApiKey(apiKey);
+        uiController.showInfo('API key saved successfully!');
+      }
+    }
+  );
+
   context.subscriptions.push(generateCommitMessageDisposable);
+  context.subscriptions.push(setApiKeyDisposable);
   context.subscriptions.push(uiController); // Add UIController to disposables
 }
 

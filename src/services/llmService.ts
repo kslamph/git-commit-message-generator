@@ -12,9 +12,10 @@ export class LLMService {
   async generateCommitMessage(diff: string): Promise<string | undefined> {
     try {
       const config = this.configManager.getConfig();
+      const apiKey = await this.configManager.getApiKey();
 
-      if (!config.apiKey) {
-        throw new Error('API key is not configured. Please set it in the extension settings.');
+      if (!apiKey) {
+        throw new Error('API key is not configured. Please set it using the "Set API Key" command.');
       }
 
       // Create prompt for the LLM
@@ -25,7 +26,7 @@ export class LLMService {
         config.baseUrl,
         config.modelId,
         prompt,
-        config.apiKey
+        apiKey
       );
 
       return response;

@@ -2,7 +2,7 @@
   "name": "commitmaster",
   "displayName": "Git Commit Message Master",
   "description": "Generate Git commit messages using AI",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "sunbankio",
   "pricing": "Free",
   "engines": {
@@ -13,7 +13,8 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:gitCommitMessageGenerator.generateCommitMessage"
+    "onCommand:gitCommitMessageGenerator.generateCommitMessage",
+    "onCommand:gitCommitMessageGenerator.setApiKey"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -22,6 +23,11 @@
         "command": "gitCommitMessageGenerator.generateCommitMessage",
         "title": "Generate Commit Message",
         "icon": "$(sparkle)"
+      },
+      {
+        "command": "gitCommitMessageGenerator.setApiKey",
+        "title": "Set API Key",
+        "category": "Git Commit Message Master"
       }
     ],
     "menus": {
@@ -59,10 +65,6 @@
           "type": "string",
           "default": "gpt-3.5-turbo",
           "description": "Model ID to use for generating commit messages"
-        },
-        "gitCommitMessageGenerator.apiKey": {
-          "type": "string",
-          "description": "API key for the LLM service (stored securely in VS Code's secret storage)"
         }
       }
     }

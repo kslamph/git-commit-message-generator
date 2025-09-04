@@ -1,4 +1,4 @@
-# Git Commit Message Generator
+# Git Commit Message Master
 
 A VS Code extension that generates Git commit messages using AI.
 
@@ -8,7 +8,7 @@ A VS Code extension that generates Git commit messages using AI.
 - Integrates with VS Code's built-in Git extension
 - Supports OpenAI compatible APIs
 - Securely stores API keys using VS Code's SecretStorage
-- Configurable model, temperature, and API endpoint
+- Configurable model and API endpoint
 
 ## Installation
 
@@ -19,13 +19,10 @@ A VS Code extension that generates Git commit messages using AI.
 
 The extension can be configured through VS Code's settings:
 
-- `gitCommitMessageGenerator.llmEngine`: The LLM engine to use (currently only 'openai' is supported)
 - `gitCommitMessageGenerator.baseUrl`: Base URL for the LLM API (default: 'https://api.openai.com/v1')
 - `gitCommitMessageGenerator.modelId`: Model ID to use for generating commit messages (default: 'gpt-3.5-turbo')
-- `gitCommitMessageGenerator.temperature`: Temperature setting for LLM creativity (0 = deterministic, 1 = creative)
-- `gitCommitMessageGenerator.apiKey`: API key for the LLM service (stored securely)
 
-To set your API key, use the "Git Commit Message Generator: Set API Key" command from the Command Palette.
+To set your API key, use the "Git Commit Message Master: Set API Key" command from the Command Palette.
 
 ## Usage
 
