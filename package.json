@@ -1,6 +1,6 @@
 {
-  "name": "git-commit-message-generator",
-  "displayName": "Git Commit Message Generator",
+  "name": "commitmaster",
+  "displayName": "Git Commit Message Master",
   "description": "Generate Git commit messages using AI",
   "version": "0.0.1",
   "publisher": "sunbankio",
@@ -56,17 +56,6 @@
     "configuration": {
       "title": "Git Commit Message Generator",
       "properties": {
-        "gitCommitMessageGenerator.llmEngine": {
-          "type": "string",
-          "default": "openai",
-          "enum": [
-            "openai"
-          ],
-          "enumDescriptions": [
-            "OpenAI compatible API"
-          ],
-          "description": "The LLM engine to use for generating commit messages"
-        },
         "gitCommitMessageGenerator.baseUrl": {
           "type": "string",
           "default": "https://api.openai.com/v1",
@@ -80,13 +69,6 @@
         "gitCommitMessageGenerator.apiKey": {
           "type": "string",
           "description": "API key for the LLM service (stored securely in VS Code's secret storage)"
-        },
-        "gitCommitMessageGenerator.temperature": {
-          "type": "number",
-          "default": 0.7,
-          "minimum": 0,
-          "maximum": 1,
-          "description": "Temperature setting for LLM creativity (0 = deterministic, 1 = creative)"
         }
       }
     }

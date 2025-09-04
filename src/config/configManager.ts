@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 
 export interface ExtensionConfig {
-  llmEngine: string;
   baseUrl: string;
   modelId: string;
-  temperature: number;
 }
 
 export class ConfigManager {
@@ -18,10 +16,8 @@ export class ConfigManager {
 
   getConfig(): ExtensionConfig {
     return {
-      llmEngine: this.config.get('llmEngine', 'openai'),
       baseUrl: this.config.get('baseUrl', 'https://api.openai.com/v1'),
-      modelId: this.config.get('modelId', 'gpt-3.5-turbo'),
-      temperature: this.config.get('temperature', 0.7)
+      modelId: this.config.get('modelId', 'gpt-3.5-turbo')
     };
   }
 

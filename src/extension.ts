@@ -27,30 +27,31 @@ export async function activate(context: vscode.ExtensionContext) {
         // Check if Git extension is available
         const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension?.isActive) {
-          vscode.window.showErrorMessage('Git extension is not available.');
+          uiController.showError('Git extension is not available.');
           return;
         }
 
         // Get staged changes
         const stagedChanges = await gitService.getStagedChanges();
         if (!stagedChanges) {
-          vscode.window.showErrorMessage('No staged changes found.');
+          uiController.showError('No staged changes found.');
           return;
         }
 
         // Generate commit message
         uiController.showProgress();
-        const commitMessage = await llmService.generateCommitMessage(stagedChanges);
+        const commitMessage = await llmService.generateCommitMessage(stagedChanges, (message: string) => {
+          uiController.updateProgress(message);
+        });
         uiController.hideProgress();
 
         if (commitMessage) {
           // Apply commit message to Git input box
           gitService.applyCommitMessage(commitMessage);
-          vscode.window.showInformationMessage('Commit message generated successfully!');
+          uiController.showInfo('Commit message generated successfully!');
         }
       } catch (error) {
-        uiController.hideProgress();
-        vscode.window.showErrorMessage(`Failed to generate commit message: ${error}`);
+        uiController.showError(`Failed to generate commit message: ${error}`);
         console.error(error);
       }
     }
@@ -66,13 +67,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
       if (apiKey) {
         await configManager.setApiKey(apiKey);
-        vscode.window.showInformationMessage('API key saved successfully!');
+        uiController.showInfo('API key saved successfully!');
       }
     }
   );
 
   context.subscriptions.push(generateCommitMessageDisposable);
   context.subscriptions.push(setApiKeyDisposable);
+  context.subscriptions.push(uiController); // Add UIController to disposables
 }
 
 export function deactivate() {
