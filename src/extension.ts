@@ -23,6 +23,15 @@ export async function activate(context: vscode.ExtensionContext) {
   const generateCommitMessageDisposable = vscode.commands.registerCommand(
     'gitCommitMessageGenerator.generateCommitMessage',
     async () => {
+      // Ensure progress is hidden even if something goes wrong
+      let progressHidden = false;
+      const hideProgressOnce = () => {
+        if (!progressHidden) {
+          progressHidden = true;
+          uiController.hideProgress();
+        }
+      };
+
       try {
         // Check if Git extension is available
         const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
@@ -40,10 +49,20 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Generate commit message
         uiController.showProgress();
+        
+        // Set a timeout to ensure progress is hidden even if LLMService hangs
+        const progressTimeout = setTimeout(() => {
+          hideProgressOnce();
+          uiController.showError('Commit message generation timed out. Please try again.');
+        }, 45000); // 45 second timeout
+
         const commitMessage = await llmService.generateCommitMessage(stagedChanges, (message: string) => {
           uiController.updateProgress(message);
         });
-        uiController.hideProgress();
+        
+        // Clear the timeout since we got a response
+        clearTimeout(progressTimeout);
+        hideProgressOnce();
 
         if (commitMessage) {
           // Apply commit message to Git input box
@@ -54,13 +73,16 @@ export async function activate(context: vscode.ExtensionContext) {
           uiController.showError('Failed to generate commit message: No response from API.');
         }
       } catch (error: unknown) {
-        uiController.hideProgress(); // Make sure to hide progress on error
+        hideProgressOnce(); // Make sure to hide progress on error
         if (error instanceof Error) {
           uiController.showError(`Failed to generate commit message: ${error.message}`);
         } else {
           uiController.showError(`Failed to generate commit message: ${String(error)}`);
         }
         console.error('Error in generateCommitMessage:', error);
+      } finally {
+        // Final safety check to ensure progress is hidden
+        setTimeout(() => hideProgressOnce(), 100);
       }
     }
   );

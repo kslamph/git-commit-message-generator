@@ -87,8 +87,19 @@ ${diff}`;
       return new Promise<string>((resolve, reject) => {
         let fullResponse = '';
         let lastProgressUpdate = '';
+        let isFinished = false;
+        
+        // Set a timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          if (!isFinished) {
+            isFinished = true;
+            resolve(fullResponse.trim());
+          }
+        }, 30000); // 30 second timeout
         
         response.body.on('data', (chunk: Buffer) => {
+          if (isFinished) return;
+          
           const lines = chunk.toString().split('\n');
           
           for (const line of lines) {
@@ -96,6 +107,8 @@ ${diff}`;
               const data = line.slice(6);
               
               if (data === '[DONE]') {
+                isFinished = true;
+                clearTimeout(timeout);
                 resolve(fullResponse.trim());
                 return;
               }
@@ -125,11 +138,27 @@ ${diff}`;
         });
         
         response.body.on('end', () => {
-          resolve(fullResponse.trim());
+          if (!isFinished) {
+            isFinished = true;
+            clearTimeout(timeout);
+            resolve(fullResponse.trim());
+          }
         });
         
         response.body.on('error', (err: Error) => {
-          reject(err);
+          if (!isFinished) {
+            isFinished = true;
+            clearTimeout(timeout);
+            reject(err);
+          }
+        });
+        
+        response.body.on('close', () => {
+          if (!isFinished) {
+            isFinished = true;
+            clearTimeout(timeout);
+            resolve(fullResponse.trim());
+          }
         });
       });
     } else {
