@@ -2,7 +2,7 @@
   "name": "commitmaster",
   "displayName": "Git Commit Message Master",
   "description": "Generate Git commit messages using AI",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "sunbankio",
   "pricing": "Free",
   "engines": {
@@ -13,8 +13,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:gitCommitMessageGenerator.generateCommitMessage",
-    "onCommand:gitCommitMessageGenerator.setApiKey"
+    "onCommand:gitCommitMessageGenerator.generateCommitMessage"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -102,11 +101,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sunbankio/gcmgvscext.git"
+    "url": "https://github.com/kslamph/git-commit-message-generator.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/sunbankio/gcmgvscext/issues"
+    "url": "https://github.com/kslamph/git-commit-message-generator/issues"
   },
-  "homepage": "https://github.com/sunbankio/gcmgvscext#readme"
+  "homepage": "https://github.com/kslamph/git-commit-message-generator#readme"
 }
