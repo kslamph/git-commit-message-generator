@@ -56,19 +56,27 @@ export async function activate(context: vscode.ExtensionContext) {
           uiController.showError('Commit message generation timed out. Please try again.');
         }, 45000); // 45 second timeout
 
-        const commitMessage = await llmService.generateCommitMessage(stagedChanges, (message: string) => {
-          uiController.updateProgress(message);
-        });
+        const commitMessage = await llmService.generateCommitMessage(stagedChanges);
         
-        // Clear the timeout since we got a response
-        clearTimeout(progressTimeout);
-        hideProgressOnce();
-
         if (commitMessage) {
-          // Apply commit message to Git input box
+          // Apply commit message to Git input box FIRST
           gitService.applyCommitMessage(commitMessage);
-          uiController.showInfo('Commit message generated successfully!');
+          
+          // Clear the timeout since we got a response
+          clearTimeout(progressTimeout);
+          
+          // Hide progress first
+          hideProgressOnce();
+          
+          // Show success message (this will also try to hide progress, but our flag prevents double calls)
+          setTimeout(() => {
+            uiController.showInfo('Commit message generated successfully!');
+          }, 50);
         } else {
+          // Clear the timeout and hide progress
+          clearTimeout(progressTimeout);
+          hideProgressOnce();
+          
           // Show error if no commit message was generated
           uiController.showError('Failed to generate commit message: No response from API.');
         }

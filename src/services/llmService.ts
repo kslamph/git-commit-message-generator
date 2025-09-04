@@ -9,7 +9,7 @@ export class LLMService {
     this.configManager = configManager;
   }
 
-  async generateCommitMessage(diff: string, onProgress?: (message: string) => void): Promise<string | undefined> {
+  async generateCommitMessage(diff: string): Promise<string | undefined> {
     try {
       const config = this.configManager.getConfig();
 
@@ -20,13 +20,12 @@ export class LLMService {
       // Create prompt for the LLM
       const prompt = this.createPrompt(diff);
 
-      // Call the LLM API with streaming support
-      const response = await this.callLLMStream(
+      // Call the LLM API (non-streaming)
+      const response = await this.callLLM(
         config.baseUrl,
         config.modelId,
         prompt,
-        config.apiKey,
-        onProgress
+        config.apiKey
       );
 
       return response;
@@ -44,24 +43,21 @@ Diff:
 ${diff}`;
   }
 
-  private async callLLMStream(
+  private async callLLM(
     baseUrl: string,
     modelId: string,
     prompt: string,
-    apiKey: string,
-    onProgress?: (message: string) => void
+    apiKey: string
   ): Promise<string> {
     const url = baseUrl.endsWith('/chat/completions') 
       ? baseUrl 
       : `${baseUrl.replace(/\/$/, '')}/chat/completions`;
 
-    // For streaming, we need to set stream to true
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'text/event-stream'
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: modelId,
@@ -72,8 +68,7 @@ ${diff}`;
           }
         ],
         temperature: 0.7,
-        max_tokens: 8192,
-        stream: true
+        max_tokens: 8192
       })
     }) as any;
 
@@ -82,89 +77,7 @@ ${diff}`;
       throw new Error(`LLM API error (${response.status}): ${errorText}`);
     }
 
-    // Handle streaming response
-    if (response.body && typeof response.body.on === 'function') {
-      return new Promise<string>((resolve, reject) => {
-        let fullResponse = '';
-        let lastProgressUpdate = '';
-        let isFinished = false;
-        
-        // Set a timeout to prevent hanging
-        const timeout = setTimeout(() => {
-          if (!isFinished) {
-            isFinished = true;
-            resolve(fullResponse.trim());
-          }
-        }, 30000); // 30 second timeout
-        
-        response.body.on('data', (chunk: Buffer) => {
-          if (isFinished) return;
-          
-          const lines = chunk.toString().split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              
-              if (data === '[DONE]') {
-                isFinished = true;
-                clearTimeout(timeout);
-                resolve(fullResponse.trim());
-                return;
-              }
-              
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                
-                if (content) {
-                  fullResponse += content;
-                  
-                  // Update progress with the current response
-                  if (onProgress) {
-                    const words = fullResponse.split(/\s+/);
-                    const currentWords = words.slice(0, Math.max(0, words.length - 1)).join(' ');
-                    if (currentWords !== lastProgressUpdate) {
-                      lastProgressUpdate = currentWords;
-                      onProgress(currentWords);
-                    }
-                  }
-                }
-              } catch (e) {
-                // Ignore parsing errors for incomplete JSON
-              }
-            }
-          }
-        });
-        
-        response.body.on('end', () => {
-          if (!isFinished) {
-            isFinished = true;
-            clearTimeout(timeout);
-            resolve(fullResponse.trim());
-          }
-        });
-        
-        response.body.on('error', (err: Error) => {
-          if (!isFinished) {
-            isFinished = true;
-            clearTimeout(timeout);
-            reject(err);
-          }
-        });
-        
-        response.body.on('close', () => {
-          if (!isFinished) {
-            isFinished = true;
-            clearTimeout(timeout);
-            resolve(fullResponse.trim());
-          }
-        });
-      });
-    } else {
-      // Fallback to non-streaming if streaming is not supported
-      const data = await response.json();
-      return data.choices[0].message.content.trim();
-    }
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
   }
 }

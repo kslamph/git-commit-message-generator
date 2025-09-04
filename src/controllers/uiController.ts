@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 
 export class UIController {
-  private progressDisposable: vscode.Disposable | undefined;
+  private progressPromise: Promise<void> | undefined;
+  private progressResolve: (() => void) | undefined;
+  private progressReject: ((reason?: any) => void) | undefined;
   private statusBarItem: vscode.StatusBarItem | undefined;
 
   constructor() {
@@ -18,8 +20,14 @@ export class UIController {
       this.statusBarItem.show();
     }
 
-    // Create a disposable for the progress
-    this.progressDisposable = vscode.window.withProgress(
+    // Create a promise for the progress that can be resolved externally
+    this.progressPromise = new Promise<void>((resolve, reject) => {
+      this.progressResolve = resolve;
+      this.progressReject = reject;
+    });
+
+    // Create the progress notification
+    vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
         title: 'Generating commit message',
@@ -27,20 +35,18 @@ export class UIController {
       },
       async (_progress, token) => {
         token.onCancellationRequested(() => {
+          if (this.progressReject) {
+            this.progressReject(new Error('Operation cancelled by user'));
+          }
           this.hideProgress();
         });
         
-        // Keep the progress alive until hidden
-        return new Promise<void>((resolve) => {
-          const interval = setInterval(() => {
-            if (!this.progressDisposable) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 100);
-        });
+        // Wait for the external promise to resolve
+        if (this.progressPromise) {
+          return this.progressPromise;
+        }
       }
-    ) as unknown as vscode.Disposable;
+    );
   }
 
   updateProgress(message: string): void {
@@ -56,23 +62,36 @@ export class UIController {
       this.statusBarItem.show();
     }
 
-    if (this.progressDisposable) {
-      this.progressDisposable.dispose();
-      this.progressDisposable = undefined;
+    // Resolve the progress promise to close the notification
+    if (this.progressResolve) {
+      this.progressResolve();
+      this.progressResolve = undefined;
+      this.progressReject = undefined;
+      this.progressPromise = undefined;
     }
   }
 
   showError(message: string): void {
-    // Hide progress first
-    this.hideProgress();
+    // Reject the progress promise to close the notification with an error
+    if (this.progressReject) {
+      this.progressReject(new Error(message));
+      this.progressResolve = undefined;
+      this.progressReject = undefined;
+      this.progressPromise = undefined;
+    }
     
     // Show error message
     vscode.window.showErrorMessage(`Commit Message Generator: ${message}`);
   }
 
   showInfo(message: string): void {
-    // Hide progress first
-    this.hideProgress();
+    // Resolve the progress promise to close the notification
+    if (this.progressResolve) {
+      this.progressResolve();
+      this.progressResolve = undefined;
+      this.progressReject = undefined;
+      this.progressPromise = undefined;
+    }
     
     // Show info message
     vscode.window.showInformationMessage(`Commit Message Generator: ${message}`);
@@ -82,8 +101,9 @@ export class UIController {
     if (this.statusBarItem) {
       this.statusBarItem.dispose();
     }
-    if (this.progressDisposable) {
-      this.progressDisposable.dispose();
+    // Make sure to resolve any pending progress
+    if (this.progressResolve) {
+      this.progressResolve();
     }
   }
 }
