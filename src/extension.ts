@@ -49,31 +49,23 @@ export async function activate(context: vscode.ExtensionContext) {
           // Apply commit message to Git input box
           gitService.applyCommitMessage(commitMessage);
           uiController.showInfo('Commit message generated successfully!');
+        } else {
+          // Show error if no commit message was generated
+          uiController.showError('Failed to generate commit message: No response from API.');
         }
-      } catch (error) {
-        uiController.showError(`Failed to generate commit message: ${error}`);
-        console.error(error);
-      }
-    }
-  );
-
-  const setApiKeyDisposable = vscode.commands.registerCommand(
-    'gitCommitMessageGenerator.setApiKey',
-    async () => {
-      const apiKey = await vscode.window.showInputBox({
-        prompt: 'Enter your API key',
-        password: true
-      });
-
-      if (apiKey) {
-        await configManager.setApiKey(apiKey);
-        uiController.showInfo('API key saved successfully!');
+      } catch (error: unknown) {
+        uiController.hideProgress(); // Make sure to hide progress on error
+        if (error instanceof Error) {
+          uiController.showError(`Failed to generate commit message: ${error.message}`);
+        } else {
+          uiController.showError(`Failed to generate commit message: ${String(error)}`);
+        }
+        console.error('Error in generateCommitMessage:', error);
       }
     }
   );
 
   context.subscriptions.push(generateCommitMessageDisposable);
-  context.subscriptions.push(setApiKeyDisposable);
   context.subscriptions.push(uiController); // Add UIController to disposables
 }
 

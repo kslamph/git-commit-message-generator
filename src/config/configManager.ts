@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 export interface ExtensionConfig {
   baseUrl: string;
   modelId: string;
+  apiKey: string;
 }
 
 export class ConfigManager {
@@ -17,19 +18,8 @@ export class ConfigManager {
   getConfig(): ExtensionConfig {
     return {
       baseUrl: this.config.get('baseUrl', 'https://api.openai.com/v1'),
-      modelId: this.config.get('modelId', 'gpt-3.5-turbo')
+      modelId: this.config.get('modelId', 'gpt-3.5-turbo'),
+      apiKey: this.config.get('apiKey', '')
     };
-  }
-
-  async getApiKey(): Promise<string | undefined> {
-    return await this.context.secrets.get('gitCommitMessageGenerator.apiKey');
-  }
-
-  async setApiKey(apiKey: string): Promise<void> {
-    await this.context.secrets.store('gitCommitMessageGenerator.apiKey', apiKey);
-  }
-
-  async deleteApiKey(): Promise<void> {
-    await this.context.secrets.delete('gitCommitMessageGenerator.apiKey');
   }
 }
