@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { GitExtension } from '../git';
+import { GitExtension, Repository } from '../git';
 
 export class GitService {
   private getGitAPI(): Promise<GitExtension | undefined> {
@@ -20,7 +20,7 @@ export class GitService {
     });
   }
 
-  async getStagedChanges(): Promise<string | undefined> {
+  async getStagedChanges(): Promise<{ stagedChanges: string | undefined; repository: Repository | undefined }> {
     try {
       const gitExtension = await this.getGitAPI();
       if (!gitExtension) {
@@ -34,83 +34,151 @@ export class GitService {
         throw new Error('No Git repositories found');
       }
 
-      // For simplicity, we'll use the first repository
-      const repository = repositories[0];
-      
-      // First, try to get staged changes
-      const uri = repository.rootUri;
-      let diff = await this.executeGitCommand(uri, ['diff', '--cached']);
-      
-      // If no staged changes, get all working changes
-      if (!diff || diff.trim() === '') {
-        diff = await this.executeGitCommand(uri, ['diff', 'HEAD']);
+      // Try to get the active repository from VS Code's SCM view
+      const activeRepository = this.getActiveRepository(api);
+      if (activeRepository) {
+        // Use the proper Git API diff method
+        try {
+          // Try to get staged changes first
+          const diff = await this.getRepositoryStagedDiff(activeRepository);
+          if (diff && diff.trim() !== '') {
+            return { stagedChanges: diff, repository: activeRepository };
+          }
+        } catch (diffError) {
+          console.log('GitService: Failed to get staged diff, trying HEAD diff:', diffError);
+          // If staged diff fails, try HEAD diff
+          try {
+            const diff = await this.getRepositoryDiff(activeRepository);
+            if (diff && diff.trim() !== '') {
+              return { stagedChanges: diff, repository: activeRepository };
+            }
+          } catch (headError) {
+            console.log('GitService: Failed to get HEAD diff:', headError);
+          }
+        }
+      }
+
+      // Fallback: check all repositories
+      for (const repository of repositories) {
+        try {
+          // Try to get staged changes first
+          const diff = await this.getRepositoryStagedDiff(repository);
+          if (diff && diff.trim() !== '') {
+            return { stagedChanges: diff, repository };
+          }
+        } catch (diffError) {
+          console.log('GitService: Failed to get staged diff for repository, trying HEAD diff:', diffError);
+          // If staged diff fails, try HEAD diff
+          try {
+            const diff = await this.getRepositoryDiff(repository);
+            if (diff && diff.trim() !== '') {
+              return { stagedChanges: diff, repository };
+            }
+          } catch (headError) {
+            console.log('GitService: Failed to get HEAD diff for repository:', headError);
+          }
+        }
       }
       
-      return diff || undefined;
+      // If we get here, no repository had changes
+      return { stagedChanges: undefined, repository: undefined };
     } catch (error) {
-      console.error('Error getting staged changes:', error);
+      console.error('GitService: Error getting staged changes:', error);
       throw error;
     }
   }
 
-  private async executeGitCommand(uri: vscode.Uri, args: string[]): Promise<string> {
+  private getActiveRepository(api: any): Repository | undefined {
     try {
-      // Try to use the Git extension's built-in command execution
-      const result = await vscode.commands.executeCommand(
-        'git.runGitCommand',
-        {
-          repository: { rootUri: uri },
-          args: args
+      // In VS Code, the active repository is typically the one associated with the currently active file
+      // or the first repository if no file is active
+      const activeTextEditor = vscode.window.activeTextEditor;
+      if (activeTextEditor) {
+        const activeFileUri = activeTextEditor.document.uri;
+        // Try to find the repository that contains the active file
+        for (const repository of api.repositories) {
+          const repoPath = repository.rootUri.fsPath;
+          if (activeFileUri.fsPath.startsWith(repoPath)) {
+            return repository;
+          }
         }
-      );
+      }
       
-      return result as string;
+      // If no active file or no repository found for active file, return the first repository
+      if (api.repositories && api.repositories.length > 0) {
+        return api.repositories[0];
+      }
+      
+      return undefined;
     } catch (error) {
-      // Fallback to using child_process if the command fails
-      console.warn('git.runGitCommand failed, falling back to child_process:', error);
-      return await this.executeGitCommandFallback(uri, args);
+      console.log('GitService: Could not determine active repository:', error);
+      // Fallback to first repository
+      try {
+        if (api.repositories && api.repositories.length > 0) {
+          return api.repositories[0];
+        }
+      } catch (fallbackError) {
+        console.log('GitService: Fallback to first repository failed:', fallbackError);
+      }
+      return undefined;
     }
   }
 
-  private async executeGitCommandFallback(uri: vscode.Uri, args: string[]): Promise<string> {
+  private async getRepositoryStagedDiff(repository: Repository): Promise<string> {
+    // Try to use the repository's diff method if available
+    // This is a simplified approach since the actual API might be different
     const { exec } = require('child_process');
-    const path = require('path');
     
     return new Promise((resolve, reject) => {
-      const command = `git ${args.join(' ')}`;
-      const cwd = uri.fsPath || process.cwd();
+      const command = 'git diff --cached';
+      const cwd = repository.rootUri.fsPath;
       
-      exec(command, { cwd }, (error: any, stdout: string, stderr: string) => {
+      exec(command, { cwd }, (error: any, stdout: string, _stderr: string) => {
         if (error) {
           reject(new Error(`Git command failed: ${error.message}`));
-          return;
+        } else {
+          resolve(stdout);
         }
-        
-        if (stderr) {
-          console.warn('Git command stderr:', stderr);
-        }
-        
-        resolve(stdout);
       });
     });
   }
 
-  applyCommitMessage(message: string): void {
+  private async getRepositoryDiff(repository: Repository): Promise<string> {
+    // Try to use the repository's diff method if available
+    // This is a simplified approach since the actual API might be different
+    const { exec } = require('child_process');
+    
+    return new Promise((resolve, reject) => {
+      const command = 'git diff HEAD';
+      const cwd = repository.rootUri.fsPath;
+      
+      exec(command, { cwd }, (error: any, stdout: string, _stderr: string) => {
+        if (error) {
+          reject(new Error(`Git command failed: ${error.message}`));
+        } else {
+          resolve(stdout);
+        }
+      });
+    });
+  }
+
+  applyCommitMessage(message: string, repository: Repository | undefined): void {
     try {
-      const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
-      if (!gitExtension) {
-        throw new Error('Git extension not found');
+      if (!repository) {
+        // Fallback to get the Git extension and use the first repository
+        const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
+        if (!gitExtension) {
+          throw new Error('Git extension not found');
+        }
+
+        const api = gitExtension.getAPI(1);
+        if (api.repositories.length === 0) {
+          throw new Error('No Git repositories found');
+        }
+
+        repository = api.repositories[0];
       }
-
-      const api = gitExtension.getAPI(1);
-      const repositories = api.repositories;
-
-      if (repositories.length === 0) {
-        throw new Error('No Git repositories found');
-      }
-
-      // For simplicity, we'll use the first repository
-      const repository = repositories[0];
+      
       repository.inputBox.value = message;
     } catch (error) {
       console.error('Error applying commit message:', error);

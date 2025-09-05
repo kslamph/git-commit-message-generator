@@ -2,11 +2,11 @@
   "name": "commitmaster",
   "displayName": "Git Commit Message Master",
   "description": "Generate Git commit messages using AI",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "sunbankio",
   "pricing": "Free",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.75.0"
   },
   "categories": [
     "Other"

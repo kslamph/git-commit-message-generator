@@ -41,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         // Get staged changes
-        const stagedChanges = await gitService.getStagedChanges();
+        const { stagedChanges, repository } = await gitService.getStagedChanges();
         if (!stagedChanges) {
           uiController.showError('No staged changes found.');
           return;
@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
         
         if (commitMessage) {
           // Apply commit message to Git input box FIRST
-          gitService.applyCommitMessage(commitMessage);
+          gitService.applyCommitMessage(commitMessage, repository);
           
           // Clear the timeout since we got a response
           clearTimeout(progressTimeout);
