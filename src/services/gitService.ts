@@ -37,46 +37,29 @@ export class GitService {
       // Try to get the active repository from VS Code's SCM view
       const activeRepository = this.getActiveRepository(api);
       if (activeRepository) {
-        // Use the proper Git API diff method
-        try {
-          // Try to get staged changes first
-          const diff = await this.getRepositoryStagedDiff(activeRepository);
-          if (diff && diff.trim() !== '') {
-            return { stagedChanges: diff, repository: activeRepository };
-          }
-        } catch (diffError) {
-          console.log('GitService: Failed to get staged diff, trying HEAD diff:', diffError);
-          // If staged diff fails, try HEAD diff
-          try {
-            const diff = await this.getRepositoryDiff(activeRepository);
-            if (diff && diff.trim() !== '') {
-              return { stagedChanges: diff, repository: activeRepository };
-            }
-          } catch (headError) {
-            console.log('GitService: Failed to get HEAD diff:', headError);
-          }
+        // Try to get staged changes first
+        const diff = await this.getRepositoryStagedDiff(activeRepository);
+        if (diff && diff.trim() !== '') {
+          return { stagedChanges: diff, repository: activeRepository };
+        }
+        // If no staged changes, try HEAD diff
+        const headDiff = await this.getRepositoryDiff(activeRepository);
+        if (headDiff && headDiff.trim() !== '') {
+          return { stagedChanges: headDiff, repository: activeRepository };
         }
       }
 
       // Fallback: check all repositories
       for (const repository of repositories) {
-        try {
-          // Try to get staged changes first
-          const diff = await this.getRepositoryStagedDiff(repository);
-          if (diff && diff.trim() !== '') {
-            return { stagedChanges: diff, repository };
-          }
-        } catch (diffError) {
-          console.log('GitService: Failed to get staged diff for repository, trying HEAD diff:', diffError);
-          // If staged diff fails, try HEAD diff
-          try {
-            const diff = await this.getRepositoryDiff(repository);
-            if (diff && diff.trim() !== '') {
-              return { stagedChanges: diff, repository };
-            }
-          } catch (headError) {
-            console.log('GitService: Failed to get HEAD diff for repository:', headError);
-          }
+        // Try to get staged changes first
+        const diff = await this.getRepositoryStagedDiff(repository);
+        if (diff && diff.trim() !== '') {
+          return { stagedChanges: diff, repository };
+        }
+        // If no staged changes, try HEAD diff
+        const headDiff = await this.getRepositoryDiff(repository);
+        if (headDiff && headDiff.trim() !== '') {
+          return { stagedChanges: headDiff, repository };
         }
       }
       
@@ -125,8 +108,6 @@ export class GitService {
   }
 
   private async getRepositoryStagedDiff(repository: Repository): Promise<string> {
-    // Try to use the repository's diff method if available
-    // This is a simplified approach since the actual API might be different
     const { exec } = require('child_process');
     
     return new Promise((resolve, reject) => {
@@ -144,8 +125,6 @@ export class GitService {
   }
 
   private async getRepositoryDiff(repository: Repository): Promise<string> {
-    // Try to use the repository's diff method if available
-    // This is a simplified approach since the actual API might be different
     const { exec } = require('child_process');
     
     return new Promise((resolve, reject) => {
