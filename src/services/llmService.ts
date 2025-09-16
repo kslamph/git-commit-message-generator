@@ -1,9 +1,8 @@
-import * as vscode from 'vscode';
 import fetch from 'node-fetch';
-import { ConfigManager, ExtensionConfig } from '../config/configManager';
+import { ConfigManager } from '../config/configManager';
 
 export class LLMService {
-  private configManager: ConfigManager;
+  private readonly configManager: ConfigManager;
 
   constructor(configManager: ConfigManager) {
     this.configManager = configManager;

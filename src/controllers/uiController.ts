@@ -4,7 +4,7 @@ export class UIController {
   private progressPromise: Promise<void> | undefined;
   private progressResolve: (() => void) | undefined;
   private progressReject: ((reason?: any) => void) | undefined;
-  private statusBarItem: vscode.StatusBarItem | undefined;
+  private readonly statusBarItem: vscode.StatusBarItem | undefined;
 
   constructor() {
     // Create a status bar item for the flashing icon

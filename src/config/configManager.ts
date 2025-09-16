@@ -6,8 +6,8 @@ export interface ExtensionConfig {
 }
 
 export class ConfigManager {
-  private context: vscode.ExtensionContext;
-  private config: vscode.WorkspaceConfiguration;
+  private readonly context: vscode.ExtensionContext;
+  private readonly config: vscode.WorkspaceConfiguration;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;

@@ -28,47 +28,43 @@ export class GitService {
       }
 
       const api = gitExtension.getAPI(1);
-      const repositories = api.repositories;
+      const { repositories } = api;
 
       if (repositories.length === 0) {
         throw new Error('No Git repositories found');
       }
 
-      // Try to get the active repository from VS Code's SCM view
       const activeRepository = this.getActiveRepository(api);
-      if (activeRepository) {
-        // Try to get staged changes first
-        const diff = await this.getRepositoryStagedDiff(activeRepository);
-        if (diff && diff.trim() !== '') {
-          return { stagedChanges: diff, repository: activeRepository };
-        }
-        // If no staged changes, try HEAD diff
-        const headDiff = await this.getRepositoryDiff(activeRepository);
-        if (headDiff && headDiff.trim() !== '') {
-          return { stagedChanges: headDiff, repository: activeRepository };
-        }
-      }
+      const reposToCheck = activeRepository
+        ? [activeRepository, ...repositories.filter(r => r !== activeRepository)]
+        : repositories;
 
-      // Fallback: check all repositories
-      for (const repository of repositories) {
-        // Try to get staged changes first
-        const diff = await this.getRepositoryStagedDiff(repository);
-        if (diff && diff.trim() !== '') {
-          return { stagedChanges: diff, repository };
-        }
-        // If no staged changes, try HEAD diff
-        const headDiff = await this.getRepositoryDiff(repository);
-        if (headDiff && headDiff.trim() !== '') {
-          return { stagedChanges: headDiff, repository };
+      for (const repository of reposToCheck) {
+        const stagedChanges = await this.getRepositoryChanges(repository);
+        if (stagedChanges) {
+          return { stagedChanges, repository };
         }
       }
       
-      // If we get here, no repository had changes
       return { stagedChanges: undefined, repository: undefined };
     } catch (error) {
       console.error('GitService: Error getting staged changes:', error);
       throw error;
     }
+  }
+
+  private async getRepositoryChanges(repository: Repository): Promise<string | undefined> {
+    const stagedDiff = await this.getRepositoryStagedDiff(repository);
+    if (stagedDiff && stagedDiff.trim() !== '') {
+      return stagedDiff;
+    }
+
+    const headDiff = await this.getRepositoryDiff(repository);
+    if (headDiff && headDiff.trim() !== '') {
+      return headDiff;
+    }
+
+    return undefined;
   }
 
   private getActiveRepository(api: any): Repository | undefined {
