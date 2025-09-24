@@ -2,7 +2,8 @@
   "name": "onlyautocommit",
   "displayName": "Only Auto Commit",
   "description": "Generate Git commit messages, powered by local LLMs.",
-  "version": "1.0.1",
+  "version": "1.0.2",
+  "icon": "resources/icon.png",
   "publisher": "sunbankio",
   "pricing": "Free",
   "engines": {

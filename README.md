@@ -1,87 +1,73 @@
 # Only Auto Commit
 
-A VS Code extension that generates Git commit messages, powered by local LLMs.
+**The simplest way to generate Git commit messages - powered by AI**
 
-## Features
+> One thing, done right. No bloat, no confusion. Just fast, intelligent commit message generation.
 
-- Generates commit messages based on your staged changes
-- Integrates with VS Code's built-in Git extension
-- Supports OpenAI compatible APIs and local models
-- Securely stores API keys using VS Code's SecretStorage
-- Configurable model and API endpoint
+## Why Only Auto Commit?
 
-## Installation
+Tired of complex extensions that try to do everything? **Only Auto Commit** does exactly what it says: automatically generates meaningful commit messages using AI. That's it.
 
-1. Install the extension from the VS Code Marketplace
-2. Configure your API key and other settings in the extension settings
+### ✨ What makes it special:
 
-## Configuration
+- **Lightweight**: Minimal dependencies, fast startup, no performance impact
+- **Simple**: One-click commit message generation, no complex workflows
+- **Flexible**: Works with any OpenAI-compatible API or local LLM
+- **Secure**: API keys stored safely using VS Code's built-in security
+- **Fast**: Optimized for speed - get commit messages in seconds
 
-The extension can be configured through VS Code's settings:
+## 🚀 Get Started in 60 Seconds
 
-- `onlyautocommit.baseUrl`: Base URL for the LLM API (default: 'https://api.openai.com/v1')
-- `onlyautocommit.modelId`: Model ID to use for generating commit messages (default: 'gpt-3.5-turbo')
+### 1. Install
+Install from the VS Code Marketplace with this command:
+```
+ext install sunbankio.onlyautocommit
+```
 
-To set your API key, use the "Only Auto Commit: Set API Key" command from the Command Palette.
+### 2. Configure (One-time setup)
+- Open VS Code Settings
+- Set your API endpoint (default: OpenAI)
+- Set your model (default: gpt-3.5-turbo)
+- Use "Only Auto Commit: Set API Key" command to securely store your API key
 
-## Usage
-
+### 3. Use It
 1. Stage your changes in Git
-2. Use the "Only Auto Commit: Generate Commit Message" command from the Command Palette or click the "Generate Commit Message" button in the Source Control view
-3. The generated commit message will appear in the commit message input box
+2. Click the "Generate Commit Message" button in Source Control
+3. Review and commit - that's it!
 
-## Development
+## ⚙️ Simple Configuration
 
-1. Clone this repository
-2. Run `npm install` to install dependencies
-3. Open the project in VS Code
-4. Press F5 to start debugging the extension
+Just two settings to worry about:
 
-To build the extension:
-```bash
-npm run compile
-```
+- **API Endpoint**: Your LLM provider's URL (supports OpenAI, local models, etc.)
+- **Model**: The AI model to use for generation
 
-To package the extension:
-```bash
-npm run package
-```
+### VSCode Configuration Keys
+- `onlyautocommit.baseUrl`
+- `onlyautocommit.modelId`
 
-To run tests:
-```bash
-npm test
-```
 
-## Project Structure
+### Ollama Configuration Example
+To use with Ollama running on the default local port with the gpt-oss:20b model:
+- **API Endpoint**: `http://localhost:11434/v1`
+- **Model**: `gpt-oss:20b`
 
-```
-├── src/
-│   ├── extension.ts          # Extension entry point
-│   ├── git.d.ts              # Git extension type definitions
-│   ├── config/
-│   │   └── configManager.ts  # Configuration management
-│   ├── services/
-│   │   ├── gitService.ts     # Git integration
-│   │   └── llmService.ts     # LLM communication
-│   └── controllers/
-│       └── uiController.ts   # UI interactions
-├── dist/                     # Compiled extension
-├── package.json              # Extension manifest
-├── tsconfig.json             # TypeScript configuration
-├── webpack.config.js         # Webpack configuration
-└── README.md                 # This file
-```
+No complex workflows. No unnecessary options. It just works.
 
-## Requirements
+## 🔒 Security First
 
-- VS Code version 1.74.0 or higher
-- Git extension enabled in VS Code
-- Access to an OpenAI compatible API
+Your API keys are stored using VS Code's secure SecretStorage - clear text never written to disk or logged.
 
-## Security
+## 🤝 Compatibility
 
-API keys are stored securely using VS Code's SecretStorage API and are never written to disk or included in logs.
+- **VS Code**: 1.74.0+
+- **Git**: Any version (uses VS Code's built-in Git extension)
+- **LLMs**: Any OpenAI-compatible API (OpenAI, Azure, local models, etc.)
 
-## License
+## 📄 License
 
-MIT
+MIT License - Free to use, modify, and distribute.
+
+---
+
+**Only Auto Commit**: Because sometimes, the best tool is the one that does one thing perfectly.
