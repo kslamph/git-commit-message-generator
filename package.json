@@ -1,66 +1,58 @@
 {
-  "name": "commitmaster",
-  "displayName": "Git Commit Message Master",
-  "description": "Generate Git commit messages using AI",
-  "version": "1.0.0",
+  "name": "onlyautocommit",
+  "displayName": "Only Auto Commit",
+  "description": "Generate Git commit messages, powered by local LLMs.",
+  "version": "1.0.1",
   "publisher": "sunbankio",
   "pricing": "Free",
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
-    "Other"
+    "SCM Providers"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:gitCommitMessageGenerator.generateCommitMessage"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "gitCommitMessageGenerator.generateCommitMessage",
+        "command": "onlyautocommit.generateCommitMessage",
         "title": "Generate Commit Message",
         "icon": "$(sparkle)"
       },
       {
-        "command": "gitCommitMessageGenerator.setApiKey",
+        "command": "onlyautocommit.setApiKey",
         "title": "Set API Key",
-        "category": "Git Commit Message Master"
+        "category": "Only Auto Commit"
       }
     ],
     "menus": {
       "scm/title": [
         {
-          "command": "gitCommitMessageGenerator.generateCommitMessage",
+          "command": "onlyautocommit.generateCommitMessage",
           "when": "scmProvider == git",
           "group": "navigation"
         }
       ],
-      "scm/inputBox": [
-        {
-          "command": "gitCommitMessageGenerator.generateCommitMessage",
-          "when": "scmProvider == git",
-          "group": "inline"
-        }
-      ],
       "scm/resourceGroup/context": [
         {
-          "command": "gitCommitMessageGenerator.generateCommitMessage",
+          "command": "onlyautocommit.generateCommitMessage",
           "when": "scmProvider == git",
           "group": "inline"
         }
       ]
     },
     "configuration": {
-      "title": "Git Commit Message Generator",
+      "title": "Only Auto Commit",
       "properties": {
-        "gitCommitMessageGenerator.baseUrl": {
+        "onlyautocommit.baseUrl": {
           "type": "string",
           "default": "https://api.openai.com/v1",
           "description": "Base URL for the LLM API"
         },
-        "gitCommitMessageGenerator.modelId": {
+        "onlyautocommit.modelId": {
           "type": "string",
           "default": "gpt-3.5-turbo",
           "description": "Model ID to use for generating commit messages"

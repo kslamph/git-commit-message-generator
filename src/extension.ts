@@ -11,7 +11,7 @@ let llmService: LLMService;
 let uiController: UIController;
 
 export async function activate(context: vscode.ExtensionContext) {
-  console.log('Git Commit Message Generator is now active');
+  console.log('Only Auto Commit is now active');
 
   // Initialize components
   configManager = new ConfigManager(context);
@@ -21,7 +21,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register commands
   const generateCommitMessageDisposable = vscode.commands.registerCommand(
-    'gitCommitMessageGenerator.generateCommitMessage',
+    'onlyautocommit.generateCommitMessage',
     async () => {
       // Ensure progress is hidden even if something goes wrong
       let progressHidden = false;
@@ -59,6 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const commitMessage = await llmService.generateCommitMessage(stagedChanges);
         
         if (commitMessage) {
+          console.log('Applying commit message:', JSON.stringify(commitMessage)); // Debug log
           // Apply commit message to Git input box FIRST
           gitService.applyCommitMessage(commitMessage, repository);
           
@@ -96,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   const setApiKeyDisposable = vscode.commands.registerCommand(
-    'gitCommitMessageGenerator.setApiKey',
+    'onlyautocommit.setApiKey',
     async () => {
       const apiKey = await vscode.window.showInputBox({
         prompt: 'Enter your API key',
@@ -116,5 +117,5 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  console.log('Git Commit Message Generator is now deactivated');
+  console.log('Only Auto Commit is now deactivated');
 }

@@ -10,7 +10,7 @@ export class UIController {
     // Create a status bar item for the flashing icon
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     this.statusBarItem.text = '$(sparkle) Generate Commit';
-    this.statusBarItem.command = 'gitCommitMessageGenerator.generateCommitMessage';
+    this.statusBarItem.command = 'onlyautocommit.generateCommitMessage';
   }
 
   showProgress(): void {
@@ -81,7 +81,7 @@ export class UIController {
     }
     
     // Show error message
-    vscode.window.showErrorMessage(`Commit Message Generator: ${message}`);
+    vscode.window.showErrorMessage(`Only Auto Commit: ${message}`);
   }
 
   showInfo(message: string): void {
@@ -94,7 +94,7 @@ export class UIController {
     }
     
     // Show info message
-    vscode.window.showInformationMessage(`Commit Message Generator: ${message}`);
+    vscode.window.showInformationMessage(`Only Auto Commit: ${message}`);
   }
 
   dispose(): void {

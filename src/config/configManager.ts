@@ -11,7 +11,7 @@ export class ConfigManager {
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
-    this.config = vscode.workspace.getConfiguration('gitCommitMessageGenerator');
+    this.config = vscode.workspace.getConfiguration('onlyautocommit');
   }
 
   getConfig(): ExtensionConfig {
@@ -22,14 +22,14 @@ export class ConfigManager {
   }
 
   async getApiKey(): Promise<string | undefined> {
-    return await this.context.secrets.get('gitCommitMessageGenerator.apiKey');
+    return await this.context.secrets.get('onlyautocommit.apiKey');
   }
 
   async setApiKey(apiKey: string): Promise<void> {
-    await this.context.secrets.store('gitCommitMessageGenerator.apiKey', apiKey);
+    await this.context.secrets.store('onlyautocommit.apiKey', apiKey);
   }
 
   async deleteApiKey(): Promise<void> {
-    await this.context.secrets.delete('gitCommitMessageGenerator.apiKey');
+    await this.context.secrets.delete('onlyautocommit.apiKey');
   }
 }
