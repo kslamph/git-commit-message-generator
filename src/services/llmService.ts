@@ -43,8 +43,18 @@ export class LLMService {
   }
 
   private createPrompt(diff: string): string {
-    return `Based on the following git diff, generate a concise git commit message following conventional commit format.
-Do not include any explanations, Only respond with the commit message itself without any additional context. Your entire response will be used directly as the commit message.
+    return `Analyze the provided git diff and generate a professional git commit message following the Conventional Commits specification.
+
+Rules:
+1. Identify the major changes in the diff.
+2. Format the message as follows:
+   <type>(<scope>): <concise summary>
+
+   [Optional: Detailed explanation or bullet points for multiple major changes]
+
+3. If there are multiple significant changes, use a multi-line body with bullet points to list them clearly.
+4. Keep the tone professional and objective. Use the imperative mood (e.g., "fix" not "fixed").
+5. Return ONLY the commit message. Do not include any introductory text, markdown code blocks, or explanations.
 
 Diff:
 ${diff}`;
@@ -134,20 +144,6 @@ ${diff}`;
     
     // Remove any remaining markdown or formatting characters at the start/end
     cleaned = cleaned.replace(/^\W*/, '').replace(/\W*$/, '');
-    
-    // Remove any text that might be after the first line (in case of multi-line responses)
-    // This ensures we only get the first meaningful line
-    const lines = cleaned.split('\n').filter(line => line.trim() !== '');
-    if (lines.length > 0) {
-      // Take the first non-empty line and remove any trailing text that might be explanations
-      cleaned = lines[0].trim();
-      
-      // If there are multiple sentences, take only the first sentence (up to the first period)
-      const sentences = cleaned.split('.');
-      if (sentences.length > 1) {
-        cleaned = sentences[0].trim() + '.';
-      }
-    }
     
     // Additional cleaning: Remove any text that might be explanations after the actual commit message
     // Look for patterns like "This commit message..." or "The commit message..."
