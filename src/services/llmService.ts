@@ -43,18 +43,26 @@ export class LLMService {
   }
 
   private createPrompt(diff: string): string {
-    return `Analyze the provided git diff and generate a professional git commit message following the Conventional Commits specification.
+    return `Analyze the provided git diff and generate a concise, professional git commit message following the Conventional Commits specification.
 
 Rules:
-1. Identify the major changes in the diff.
-2. Format the message as follows:
-   <type>(<scope>): <concise summary>
+1. **Structure**:
+   - If the changes focus on a **single goal**, use a **single line** only:
+     \`<type>(<scope>): <concise summary>\`
+   - If there are **multiple distinct goals**, use a **multi-line** format:
+     \`<type>(<scope>): <concise summary of the main theme>\`
+     
+     \`- <concise bullet point for change 1>\`
+     \`- <concise bullet point for change 2>\`
 
-   [Optional: Detailed explanation or bullet points for multiple major changes]
+2. **Conciseness**:
+   - **Do not** repeat the subject line in the body.
+   - **Do not** explain "how" the code works, only "what" changed and "why".
+   - Keep bullet points short (under 72 characters if possible).
 
-3. If there are multiple significant changes, use a multi-line body with bullet points to list them clearly.
-4. Keep the tone professional and objective. Use the imperative mood (e.g., "fix" not "fixed").
-5. Return ONLY the commit message. Do not include any introductory text, markdown code blocks, or explanations.
+3. **Tone**: Use the imperative mood (e.g., "fix" not "fixed", "add" not "added").
+
+4. **Output**: Return ONLY the raw commit message. No markdown code blocks, no introductory text.
 
 Diff:
 ${diff}`;
