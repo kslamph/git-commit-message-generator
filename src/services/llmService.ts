@@ -43,26 +43,36 @@ export class LLMService {
   }
 
   private createPrompt(diff: string): string {
-    return `Analyze the provided git diff and generate a concise, professional git commit message following the Conventional Commits specification.
+    return `Analyze the git diff and generate ONE Conventional Commits message.
 
-Rules:
-1. **Structure**:
-   - If the changes focus on a **single goal**, use a **single line** only:
-     \`<type>(<scope>): <concise summary>\`
-   - If there are **multiple distinct goals**, use a **multi-line** format:
-     \`<type>(<scope>): <concise summary of the main theme>\`
-     
-     \`- <concise bullet point for change 1>\`
-     \`- <concise bullet point for change 2>\`
+CRITICAL RULES:
+1. Output ONLY the commit message - no markdown, no intro text, no "Summary:", no "The changes:".
+2. Default to a SINGLE LINE. Use multi-line body ONLY when absolutely necessary for clarity.
+3. Generate ONE commit message only - not a list of messages.
 
-2. **Conciseness**:
-   - **Do not** repeat the subject line in the body.
-   - **Do not** explain "how" the code works, only "what" changed and "why".
-   - Keep bullet points short (under 72 characters if possible).
+HEADER FORMAT:
+<type>(<scope>): <what changed and why>
 
-3. **Tone**: Use the imperative mood (e.g., "fix" not "fixed", "add" not "added").
+Type: feat, fix, refactor, chore, docs, test, perf, ci, build, revert, style
+Scope: brief noun (e.g., auth, api, ui, db) - omit if unclear
+Summary: 50 chars max, imperative mood, captures the ESSENCE (why, not how)
 
-4. **Output**: Return ONLY the raw commit message. No markdown code blocks, no introductory text.
+BODY FORMAT (use sparingly):
+- Only for multi-part changes or breaking changes
+- Each bullet: 72 chars max, imperative mood
+- Focus on KEY changes only - omit implementation details, refactors, code cleanup
+- Omit if all changes are covered by header
+
+EXAMPLE 1 (single line):
+feat(auth): add OAuth login
+
+EXAMPLE 2 (single line):
+fix(db): prevent duplicate user creation
+
+EXAMPLE 3 (multi-line):
+feat(api): add streaming support for large responses
+- implement server-sent events endpoint
+- add client reconnection logic
 
 Diff:
 ${diff}`;
@@ -136,34 +146,36 @@ ${diff}`;
   }
 
   private cleanResponse(response: string): string {
-    
+    let cleaned = response;
+
+    // Remove thinking blocks (e.g., ...</think>, think> ...)
+    cleaned = cleaned.replace(/[\s\S]*?<\/think>/gi, '');
+    cleaned = cleaned.replace(/^think>[\s\S]*?$/gm, '');
+    cleaned = cleaned.replace(/^\s*think>[\s\S]*?$/gm, '');
+
     // Remove markdown code blocks if present
-    // Remove leading and trailing code block markers (```lang or just ```)
-    let cleaned = response.replace(/^```\w*\s*\n?|```$/gm, '');
-    
-    // If there are still code blocks in the middle, remove them
+    cleaned = cleaned.replace(/^```\w*\s*\n?|```$/gm, '');
     cleaned = cleaned.replace(/```[\s\S]*?\n([\s\S]*?)\n```/g, '$1');
-    
+
     // Remove any leading or trailing quotes
     cleaned = cleaned.replace(/^["']|["']$/g, '');
-    
+
     // Remove common prefixes like "Here is a commit message:" or similar
     cleaned = cleaned.replace(/^(Here is |Here's |Suggested |Generated )?a (commit )?message?(:\s*)?/i, '');
-    
-    // Remove any remaining markdown or formatting characters at the start/end
-    cleaned = cleaned.replace(/^\W*/, '').replace(/\W*$/, '');
-    
-    // Additional cleaning: Remove any text that might be explanations after the actual commit message
-    // Look for patterns like "This commit message..." or "The commit message..."
+
+    // Remove meta-text patterns
+    cleaned = cleaned.replace(/^Summary of changes?:?\s*$/im, '');
+    cleaned = cleaned.replace(/^The changes?:?\s*$/im, '');
+    cleaned = cleaned.replace(/^What changed:?\s*$/im, '');
     cleaned = cleaned.replace(/\s*[Tt]his (commit message|message).*$/, '');
     cleaned = cleaned.replace(/\s*[Tt]he (commit message|message).*$/, '');
     cleaned = cleaned.replace(/\s*[Cc]onsider using this.*$/, '');
     cleaned = cleaned.replace(/\s*[Pp]ossible commit message.*$/, '');
-    
-    // Remove any remaining prefixes that might be added by the LLM
+
+    // Remove any remaining prefixes
     cleaned = cleaned.replace(/^[Cc]ommit [Mm]essage:\s*/, '');
     cleaned = cleaned.replace(/^[Cc]ommit:\s*/, '');
-    
+
     // Trim whitespace
     cleaned = cleaned.trim();
     return cleaned;
